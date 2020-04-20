@@ -4,9 +4,9 @@ from __future__ import unicode_literals, print_function
 
 import pandas as pd
 
-from experiments.sst2.settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE
-from knowledge_distillation.lstm_trainer import LSTMBaseline
-from knowledge_distillation.utils import get_logger, set_seed
+from settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE
+from lstm_trainer import LSTMBaseline
+from utils import get_logger, set_seed
 
 if __name__ == '__main__':
 

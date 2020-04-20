@@ -11,13 +11,13 @@ from torch.utils.data import TensorDataset, RandomSampler, DataLoader, Sequentia
 from torchtext import data
 from tqdm import tqdm
 
-from knowledge_distillation.loss import WeightedMSE
-from knowledge_distillation.modeling_lstm import SimpleLSTM
-from knowledge_distillation.modeling_conv import SimpleCNN
-from knowledge_distillation.naiveBert import BasicTransformer
-from knowledge_distillation.text_utils import normalize
-from knowledge_distillation.trainer import Trainer
-from knowledge_distillation.utils import device, to_indexes, pad
+from loss import WeightedMSE
+from modeling_lstm import SimpleLSTM
+from modeling_cnn import SimpleCNN
+from naiveBert import BasicTransformer
+from text_utils import normalize
+from trainer import Trainer
+from utils import device, to_indexes, pad
 
 
 class _LSTMBase(Trainer):

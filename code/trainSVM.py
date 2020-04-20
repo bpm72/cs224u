@@ -5,18 +5,17 @@ from __future__ import unicode_literals, print_function
 import pandas as pd
 import numpy as np
 
-from experiments.sst2.settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE
-from knowledge_distillation.bert_data import df_to_dataset
-from knowledge_distillation.bert_trainer import BertTrainer
-from knowledge_distillation.utils import get_logger, set_seed
+from settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE
+from bert_data import df_to_dataset
+from bert_trainer import BertTrainer
+from utils import get_logger, set_seed
 from sklearn.svm import LinearSVC
-from thundersvm import SVC
 from sklearn.metrics import accuracy_score
-from knowledge_distillation.text_utils import normalize
+from text_utils import normalize
 from sklearn.model_selection import train_test_split
 from datetime import datetime
-from knowledge_distillation.trainer import Trainer
-from knowledge_distillation.utils import device, to_indexes, pad
+from trainer import Trainer
+from utils import device, to_indexes, pad
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, RandomSampler, DataLoader, SequentialSampler
