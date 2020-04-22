@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from loss import WeightedMSE
 from modeling_lstm import SimpleLSTM
+from modeling_bilstm_attn import BiLSTM_Attn
 from modeling_cnn import SimpleCNN
 from naiveBert import BasicTransformer
 from text_utils import normalize
@@ -42,7 +43,7 @@ class _LSTMBase(Trainer):
         real_label = real_label.to(device())
         return text, bert_prob, real_label
 
-    def train(self, X, y, y_real, output_dir):
+    def train(self, X, y, y_real, model_name, output_dir):
 
         X_split = [normalize(t.split()) for t in X]
 
@@ -65,10 +66,10 @@ class _LSTMBase(Trainer):
         train_dataset = self.to_dataset(X_train_index, y_train, y_real_train)
         val_dataset = self.to_dataset(X_test_index, y_test, y_real_test)
 
-        model = self.model(text_field)
+        model = self.model(text_field,model_name)
         model.to(device())
 
-        self.full_train(model, train_dataset, val_dataset, output_dir)
+        self.full_train(model, model_name, train_dataset, val_dataset, output_dir)
         torch.save(text_field, os.path.join(output_dir, self.vocab_name))
 
         return model, text_field.vocab
@@ -79,7 +80,7 @@ class _LSTMBase(Trainer):
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.9)
         return optimizer, scheduler
 
-    def full_train(self, model, train_dataset, val_dataset, output_dir):
+    def full_train(self, model, model_name, train_dataset, val_dataset, output_dir):
         """
         :param model:
         :param train_dataset:
@@ -93,7 +94,7 @@ class _LSTMBase(Trainer):
         best_eval_loss = 100000
 
         for epoch in range(num_train_epochs):
-            train_loss = self.epoch_train_func(model, train_dataset)
+            train_loss = self.epoch_train_func(model, model_name, train_dataset)
             eval_loss, acc = self.epoch_evaluate_func(model, val_dataset, epoch)
             self.log_epoch(train_loss, eval_loss, acc, epoch)
 
@@ -102,7 +103,7 @@ class _LSTMBase(Trainer):
                 self.logger.info('save best model {:.4f}'.format(eval_loss))
                 torch.save(model.state_dict(), os.path.join(output_dir, self.weights_name))
 
-    def epoch_train_func(self, model, dataset):
+    def epoch_train_func(self, model, model_name, dataset):
         train_loss = 0
         train_sampler = RandomSampler(dataset)
         data_loader = DataLoader(dataset, sampler=train_sampler, batch_size=self.settings['train_batch_size'],
@@ -119,7 +120,7 @@ class _LSTMBase(Trainer):
             text, bert_prob, real_label = self.to_device(text, bert_prob, real_label)
             model.zero_grad()
             #print('model input shape : {}'.format(text.t().shape))
-            output = model(text.t()).squeeze(1)
+            output = model(text.t(), model_name).squeeze(1)
             #print('model output shape : {}'.format(output.squeeze(1).shape))
             loss = self.loss(output, bert_prob, real_label)
             #print('exiting loss()')
@@ -183,29 +184,46 @@ class LSTMBaseline(_LSTMBase):
         #print('real_label.shape = {}'.format(real_label.shape))
         return self.criterion(output, real_label)
 
-    def model(self, text_field):
-
-        model = SimpleLSTM(
-            input_dim=len(text_field.vocab),
-            embedding_dim=16,
-            hidden_dim=8,
-            output_dim=2,
-            n_layers=1,
-            bidirectional=True,
-            dropout=0.2,
-            batch_size=self.settings['train_batch_size'])
-        return model
-
-#       model = SimpleCNN(
-#           input_dim=len(text_field.vocab),
-#           embedding_dim=16,
-#           hidden_dim=8,
-#           num_classes=2,
-#           num_kernels=2,
-#           kernel_sizes_lst=[3,4],
-#           dropout=0.3,
-#           batch_size=self.settings['train_batch_size'])
-#       return model
+    def model(self, text_field, model_name):
+        if model_name == 'LSTM':
+            print('LSTM Model chosen')
+            model = SimpleLSTM(
+                input_dim=len(text_field.vocab),
+                embedding_dim=16,
+                hidden_dim=8,
+                output_dim=2,
+                n_layers=1,
+                bidirectional=True,
+                dropout=0.2,
+                batch_size=self.settings['train_batch_size'])
+            return model
+        elif model_name == 'BiLSTM_Attn':
+            print('BiLSTM Attention Model chosen')
+            model = BiLSTM_Attn(
+                input_dim=len(text_field.vocab),
+                embedding_dim=16,
+                hidden_dim=8,
+                output_dim=2,
+                n_layers=1,
+                bidirectional=True,
+                dropout=0.2,
+                batch_size=self.settings['train_batch_size'])
+            return model
+        elif model_name == 'CNN':
+            print('CNN Model chosen')
+            model = SimpleCNN(
+                input_dim=len(text_field.vocab),
+                embedding_dim=16,
+                hidden_dim=8,
+                num_classes=2,
+                num_kernels=2,
+                kernel_sizes_lst=[3,4],
+                dropout=0.3,
+                batch_size=self.settings['train_batch_size'])
+            return model
+        else :
+            print('unknown model chose')
+            exit(0)
 
 #        model = BasicTransformer(
 #            input_dim=len(text_field.vocab),

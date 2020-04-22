@@ -42,7 +42,7 @@ class SimpleCNN(nn.Module):
             return torch.device('cuda')
         return device
 
-    def forward(self, x):
+    def forward(self, x, text_lengths=None):
         x = self.embed(x.t())  # (N, W, D)
         
 #        if self.args.static:
