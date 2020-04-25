@@ -28,7 +28,7 @@ bert_settings = {
 
 lstm_settings = {
     'max_seq_length': 128,
-    'num_train_epochs': 5,
+    'num_train_epochs': 15,
     'train_batch_size': 32,
     'eval_batch_size': 32,
     'test_size': TRAIN_TEST_RATIO,
@@ -38,7 +38,7 @@ lstm_settings = {
 
 distillation_settings = {
     'max_seq_length': 128,
-    'num_train_epochs': 4,
+    'num_train_epochs': 15,
     'train_batch_size': 32,
     'eval_batch_size': 32,
     'test_size': TRAIN_TEST_RATIO,

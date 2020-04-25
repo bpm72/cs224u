@@ -8,8 +8,8 @@ from tqdm import tqdm
 from transformers import AdamW
 from transformers import BertForSequenceClassification
 
-from knowledge_distillation.trainer import Trainer
-from knowledge_distillation.utils import device
+from trainer import Trainer
+from utils import device
 
 
 def batch_to_inputs(batch):
@@ -23,10 +23,10 @@ def batch_to_inputs(batch):
 
 class BertTrainer(Trainer):
 
-    def train(self, train_dataset, tokenizer, output_dir):
+    def train(self, train_dataset, test_dataset, tokenizer, output_dir):
         model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
         model.to(device())
-        self.full_train(train_dataset, model, tokenizer, output_dir)
+        self.full_train(train_dataset, test_dataset, model, tokenizer, output_dir)
         return model
 
     def optimizer(self, model):
@@ -37,12 +37,14 @@ class BertTrainer(Trainer):
                           eps=train_settings['adam_epsilon'])
         return optimizer
 
-    def full_train(self, dataset, model, tokenizer, output_dir):
+    def full_train(self, train_dataset, test_dataset, model, tokenizer, output_dir):
 
         train_settings = self.settings
 
-        val_len = int(len(dataset) * train_settings['test_size'])
-        train_dataset, val_dataset = random_split(dataset, (len(dataset)-val_len, val_len))
+        #val_len = int(len(dataset) * train_settings['test_size'])
+        #train_dataset, val_dataset = random_split(dataset, (len(dataset)-val_len, val_len))
+        train_dataset = train_dataset
+        val_dataset = test_dataset
 
         optimizer = self.optimizer(model)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.9)

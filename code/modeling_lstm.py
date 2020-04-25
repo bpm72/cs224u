@@ -21,6 +21,7 @@ class SimpleLSTM(nn.Module):
                            hidden_dim,
                            num_layers=n_layers,
                            bidirectional=bidirectional,
+                           batch_first=True,
                            dropout=dropout)
 
         self.fc = nn.Linear(hidden_dim * 2, output_dim)
@@ -37,7 +38,7 @@ class SimpleLSTM(nn.Module):
 
     def forward(self, text, text_lengths=None):
 
-        x = self.embedding(text)
+        x = self.embedding(text.t())
 
         x, hidden = self.rnn(x)
 
