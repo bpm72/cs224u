@@ -7,7 +7,7 @@ import sys
 import os
 import sst
 
-from settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE
+from settings import lstm_settings, ROOT_DATA_PATH, TRAIN_FILE, DEV_FILE
 from lstm_trainer import LSTMBaseline
 from utils import get_logger, set_seed
 
@@ -28,6 +28,7 @@ if __name__ == '__main__':
 
     set_seed(3)
 
+    '''
     #train_df = pd.read_csv(TRAIN_FILE, encoding='utf-8', sep='\t')
     #X_train = train_df['sentence'].values
     #y_train = train_df['label'].values
@@ -51,6 +52,16 @@ if __name__ == '__main__':
             y_test.append(1)
         else:
             y_test.append(0)
+
+    '''
+
+    train_df = pd.read_csv(TRAIN_FILE, encoding='utf-8', sep='\t')
+    X_train = train_df['sentence'].values
+    y_train = train_df['label'].values
+
+    test_df = pd.read_csv(DEV_FILE, encoding='utf-8', sep='\t')
+    X_test = test_df['sentence'].values
+    y_test = test_df['label'].values
 
     my_trainer = LSTMBaseline(lstm_settings, logger)
     model, vocab = my_trainer.train(X_train, X_test, y_train, y_test, y_train, model_name, ROOT_DATA_PATH)

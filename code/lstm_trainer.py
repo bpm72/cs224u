@@ -22,6 +22,8 @@ from trainer import Trainer
 from utils import device, to_indexes, pad
 from sklearn.metrics import classification_report
 
+INPUT_DIM =  64 
+HIDDEN_DIM = 64 
 
 class _LSTMBase(Trainer):
 
@@ -174,7 +176,7 @@ class _LSTMBase(Trainer):
         #print('plabels = {}'.format(labels))
         #print('predictions = {} '.format(predictions))
         #print(classification_report(real_label.cpu().numpy(), pred_label.cpu().numpy()))
-        return eval_loss / num_examples, acc / num_examples
+        return eval_loss / len(eval_dataset), acc / len(eval_dataset)
 
     def loss(self, output, bert_prob, real_label):
         raise NotImplementedError()
@@ -206,36 +208,36 @@ class LSTMBaseline(_LSTMBase):
             print('LSTM Model chosen')
             model = SimpleLSTM(
                 input_dim=len(text_field.vocab),
-                embedding_dim=32,
-                hidden_dim=32,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 output_dim=2,
                 n_layers=1,
                 bidirectional=True,
-                dropout=0.5,
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         elif model_name == 'BiLSTM_Attn':
             print('BiLSTM Attention Model chosen')
             model = BiLSTM_Attn(
                 input_dim=len(text_field.vocab),
-                embedding_dim=32,
-                hidden_dim=32,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 output_dim=2,
                 n_layers=1,
                 bidirectional=True,
-                dropout=0.5,
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         elif model_name == 'CNN':
             print('CNN Model chosen')
             model = SimpleCNN(
                 input_dim=len(text_field.vocab),
-                embedding_dim=32,
-                hidden_dim=32,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 num_classes=2,
                 num_kernels=3,
                 kernel_sizes_lst=[3,4,5],
-                dropout=0.5,
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         else :
@@ -265,15 +267,20 @@ class LSTMDistilled(_LSTMBase):
         self.criterion = torch.nn.CrossEntropyLoss()
         self.criterion_mse = torch.nn.MSELoss() #WeighterMSE() 
         self.criterion_ce = torch.nn.CrossEntropyLoss()
+        self.criterion_kl = torch.nn.KLDivLoss()
         self.alpha = 0.5
 
     def loss(self, output, bert_prob, real_label):
         #return self.alpha * self.criterion_ce(output, real_label) + (1 - self.alpha) * self.criterion_mse(output, bert_prob)
-        l1 = self.criterion_ce(output, real_label)
+        #l1 = self.criterion_ce(output, real_label)
         #print('format of output = {}'.format(output.shape))
         #print('format of bert_prob = {}'.format(bert_prob.shape))
-        l2 = self.criterion_mse(output,bert_prob)
-        return self.alpha*l1 + (1-self.alpha)*l2
+        #print('format of real_label = {}'.format(real_label.shape))
+        #print('format of new_real_label = {}'.format(new_real_label.shape))
+        #l2 = self.criterion_mse(output,bert_prob)
+        #return self.alpha*l1 + (1-self.alpha)*l2
+        new_real_label = torch.stack((real_label,torch.ones_like(real_label)-real_label),dim=1) #vertical/column-wise concatenation
+        return self.criterion_mse(output,(bert_prob+new_real_label)*0.5)
  
     def eval_loss(self, output, bert_prob, real_label):
         return self.criterion(output, real_label)
@@ -282,35 +289,35 @@ class LSTMDistilled(_LSTMBase):
         if model_name == 'LSTM':
             model = SimpleLSTM(
                 input_dim=len(text_field.vocab),
-                embedding_dim=32,
-                hidden_dim=32,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 output_dim=2,
                 n_layers=1,
                 bidirectional=True,
-                dropout=0.3,
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         elif model_name == 'BiLSTM_Attn':
             print('BiLSTM Attention Model chosen')
             model = BiLSTM_Attn(
                 input_dim=len(text_field.vocab),
-                embedding_dim=32,
-                hidden_dim=32,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 output_dim=2,
                 n_layers=1,
                 bidirectional=True,
-                dropout=0.3,
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         elif model_name == 'CNN':
             model = SimpleCNN(
                 input_dim=len(text_field.vocab),
-                embedding_dim=16,
-                hidden_dim=8,
+                embedding_dim=INPUT_DIM,
+                hidden_dim=HIDDEN_DIM,
                 num_classes=2,
-                num_kernels=2,
-                kernel_sizes_lst=[3,4],
-                dropout=0.3,
+                num_kernels=3,
+                kernel_sizes_lst=[3,4,5],
+                dropout=0.2,
                 batch_size=self.settings['train_batch_size'])
             return model
         else :

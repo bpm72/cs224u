@@ -11,7 +11,7 @@ from torch.utils.data import SequentialSampler, DataLoader
 from tqdm import tqdm
 from transformers import BertForSequenceClassification, BertTokenizer
 
-from settings import distillation_settings, TRAIN_FILE, ROOT_DATA_PATH
+from settings import distillation_settings, TRAIN_FILE, ROOT_DATA_PATH, DEV_FILE
 from settings import bert_settings
 from bert_data import df_to_dataset
 from bert_trainer import batch_to_inputs
@@ -33,38 +33,14 @@ if __name__ == '__main__':
     SST_HOME = os.path.join('', 'trees')
 
     model_name = sys.argv[1]
-    print('Model selected = {}'.format(model_name))
+    print('Model selected = Distil_{}'.format(model_name))
 
     set_seed(3)
 
+    '''
     # 1. get data
-    #train_df = pd.read_csv(TRAIN_FILE, encoding='utf-8', sep='\t')
-
-    #bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
-    X_train_lst, y_train_txt = sst.build_rnn_dataset( SST_HOME, sst.train_reader, class_func=sst.binary_class_func)
-    X_train = [' '.join(X_train_lst[index]) for index in range(len(X_train_lst))]
-
-    y_train = []
-    for label in y_train_txt:
-        if label =='positive':
-            y_train.append(1)
-        else:
-            y_train.append(0)
-    
-    train_df = pd.DataFrame({'sentence':X_train, 'label':y_train})
-
-    X_test_lst, y_test_txt = sst.build_rnn_dataset( SST_HOME, sst.test_reader, class_func=sst.binary_class_func)
-    X_test = [' '.join(X_test_lst[index]) for index in range(len(X_test_lst))]
-
-    y_test = []
-    for label in y_test_txt:
-        if label =='positive':
-            y_test.append(1)
-        else:
-            y_test.append(0)
-
-    test_df = pd.DataFrame({'sentence':X_test, 'label':y_test})
+    train_df = pd.read_csv(TRAIN_FILE, encoding='utf-8', sep='\t')
+    bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     bert_model = BertForSequenceClassification.from_pretrained(ROOT_DATA_PATH)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -76,7 +52,6 @@ if __name__ == '__main__':
     bert_model.to(device())
     bert_model.eval()
 
-    '''
     bert_logits = None
 
     for batch in tqdm(data, desc="bert logits"):
@@ -94,9 +69,8 @@ if __name__ == '__main__':
             else:
                 bert_logits = np.vstack((bert_logits, logits))
 
-    
     # Its important to use binary mode 
-    dbfile = open('bert_logits_pickle.pkl', 'ab') 
+    dbfile = open('bert_logits_pickle_new.pkl', 'wb') 
       
     # source, destination 
     pickle.dump(bert_logits, dbfile)                      
@@ -106,15 +80,18 @@ if __name__ == '__main__':
     '''
 
     # Read the stored bert_logits. 
-    dbfile = open('bert_logits_pickle.pkl', 'rb')      
+    dbfile = open('bert_logits_pickle_new.pkl', 'rb')      
     bert_logits = pickle.load(dbfile) 
     dbfile.close() 
-    
 
     # 2.
-    #X_train = train_df['sentence'].values
-    #y_real = y_train
-    #y_train = bert_logits
+    train_df = pd.read_csv(TRAIN_FILE, encoding='utf-8', sep='\t')
+    X_train = train_df['sentence'].values
+    y_train = train_df['label'].values
+
+    test_df = pd.read_csv(DEV_FILE, encoding='utf-8', sep='\t')
+    X_test = test_df['sentence'].values
+    y_test = test_df['label'].values
 
     # 3. trainer
     distiller = LSTMDistilled(distillation_settings, logger)
