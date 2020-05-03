@@ -4,15 +4,15 @@
 
 ## Instructions to run
 
-Run the baseline BERT model fine-tuned on the SST-2 database
-$ python bert_trainer.py
+Run the baseline BERT model fine-tuned on the SST-2 database<br />
+$ python bert_trainer.py<br />
 
-Run the baseline student models to set the baseline performance
-$ python train_baseline.py LSTM 
-$ python train_baseline.py BiLSTM_Attn 
-$ python train_baseline.py CNN 
+Run the baseline student models to set the baseline performance<br />
+$ python train_baseline.py LSTM <br />
+$ python train_baseline.py BiLSTM_Attn<br /> 
+$ python train_baseline.py CNN <br />
 
-Now, run the models with distillation to evaluate performance
-$ python distil_bert.py LSTM 
-$ python distil_bert.py BiLSTM_Attn 
-$ python distil_bert.py CNN 
+Now, run the models with distillation to evaluate performance<br />
+$ python distil_bert.py LSTM <br />
+$ python distil_bert.py BiLSTM_Attn<br /> 
+$ python distil_bert.py CNN <br />
