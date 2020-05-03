@@ -5,7 +5,7 @@
 ## Instructions to run
 
 Run the baseline BERT model fine-tuned on the SST-2 database<br />
-$ python bert_trainer.py<br />
+$ python train_bert.py<br />
 
 Run the baseline student models to set the baseline performance<br />
 $ python train_baseline.py LSTM <br />
