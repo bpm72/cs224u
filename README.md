@@ -4,6 +4,8 @@
 
 ## Instructions to run
 
+Note - The baseline code & formatted SST-2 data used for the simulations is from https://github.com/pvgladkov/knowledge-distillation
+
 Run the baseline BERT model fine-tuned on the SST-2 database<br />
 $ python train_bert.py<br />
 
